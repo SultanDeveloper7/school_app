@@ -17,9 +17,9 @@ export async function POST(req: NextRequest) {
   if (!data.email || !data.password) {
     return response(null, "All fields are required", "MISSING_FIELDS", 400);
   }
-
+  let conn;
   try {
-    const conn = await connect();
+    conn = await connect();
     const [existingUser] = await conn.execute("SELECT * FROM users WHERE user_email = ?", [data.email]);
     const result = existingUser as UserTableType[];
     if (result.length === 0) {
@@ -30,9 +30,13 @@ export async function POST(req: NextRequest) {
       return response(null, "Invalid password", "INVALID_PASSWORD", 401);
     }
     const jwtService = new JwtService();
-    const jwtResult = jwtService.generateToken({
-      user_id: result[0].user_id,
-    });
+    const jwtResult = jwtService.generateToken(
+      {
+        user_id: result[0].user_id,
+      },
+      false,
+      conn,
+    );
     if (!jwtResult) {
       return response(null, "Failed to generate token", "TOKEN_GENERATION_FAILED", 500);
     }
@@ -57,5 +61,9 @@ export async function POST(req: NextRequest) {
     return loginResponse;
   } catch (error) {
     return response(null, `Server error: ${error}`, "SERVER_ERROR", 500);
+  } finally {
+    if(conn) {
+      await conn.end();
+    }
   }
 }

@@ -5,15 +5,15 @@ import connect from "../db/db";
 import { RefreshTokenType } from "@/types/databaseTypes/refreshTokenType";
 import { CreatedJwtTokenType } from "@/types/coreTypes/createdJwtTokenType";
 import { RefreshTokenResultType } from "@/types/coreTypes/refreshTokenResultType";
+import { Connection } from "mysql2/promise";
 
 export class JwtService {
   secretToken = process.env.JWT_SECRET as string;
   expriresIn = process.env.JWT_EXPIRES_IN as string;
 
-  public async deleteRefreshTokenFromDb(userId: number, refreshToken: string) {
+  public async deleteRefreshTokenFromDb(userId: number, refreshToken: string, conn: Connection) {
     const sql = "DELETE FROM refresh_token WHERE user_id = ? AND refresh_token = ?";
     try {
-      const conn = await connect();
       const [result] = await conn.execute(sql, [userId, refreshToken]);
       return result;
     } catch (error) {
@@ -21,14 +21,14 @@ export class JwtService {
     }
   }
 
-  public generateToken(payload: JwtPayloadType, isUpdate: boolean = false): CreatedJwtTokenType | null {
+  public generateToken(payload: JwtPayloadType, isUpdate: boolean = false, conn: Connection): CreatedJwtTokenType | null {
     const token = jwt.sign(payload, this.secretToken, {
       expiresIn: this.expriresIn,
     } as jwt.SignOptions);
     const refreshToken = crypto.randomUUID();
     try {
       if (!isUpdate) {
-        this.insertTokenToDb(refreshToken, payload.user_id);
+        this.insertTokenToDb(refreshToken, payload.user_id, conn);
       }
       return { token, refreshToken };
     } catch (error) {
@@ -36,10 +36,9 @@ export class JwtService {
       return null;
     }
   }
-  public async insertTokenToDb(refreshToken: string, userId: number) {
+  public async insertTokenToDb(refreshToken: string, userId: number, conn: Connection) {
     const sql = "INSERT INTO refresh_token (refresh_token, refresh_created, refresh_expires, user_id) VALUES (?, ?, ?, ?)";
     try {
-      const conn = await connect();
       const [result] = await conn.execute(sql, [
         refreshToken,
         new Date(),
@@ -51,11 +50,10 @@ export class JwtService {
       console.error("Error inserting token into database:", error);
     }
   }
-  public async updateTokenInDb(oldRefreshToken: string, refreshToken: string, userId: number) {
+  public async updateTokenInDb(oldRefreshToken: string, refreshToken: string, userId: number, conn: Connection) {
     const sql =
       "UPDATE refresh_token SET refresh_token = ?, refresh_created = ?, refresh_expires = ? WHERE user_id = ? AND refresh_token = ?";
     try {
-      const conn = await connect();
       const [result] = await conn.execute(sql, [
         refreshToken,
         new Date(),
@@ -68,12 +66,10 @@ export class JwtService {
       console.error("Error updating token in database:", error);
     }
   }
-  public checkToken(token: string) {}
 
-  public async refreshToken(refreshToken: string, userId: number): Promise<RefreshTokenResultType> {
+  public async refreshToken(refreshToken: string, userId: number, conn: Connection): Promise<RefreshTokenResultType> {
     const sql = "SELECT * FROM refresh_token WHERE refresh_token = ? AND user_id = ?";
     try {
-      const conn = await connect();
       const [rows] = await conn.execute(sql, [refreshToken, userId]);
       const result = rows as RefreshTokenType[];
       if (result.length === 0) {
@@ -85,12 +81,12 @@ export class JwtService {
         return { status: false, message: "Refresh token has expired", error: "TOKEN_EXPIRED" };
       }
 
-      const data = this.generateToken({ user_id: userId }, true);
+      const data = this.generateToken({ user_id: userId }, true, conn);
       if (!data) {
         return { status: false, message: "Failed to generate new token", error: "UNKNOWN_ERROR" };
       }
 
-      await this.updateTokenInDb(refreshToken, data.refreshToken, userId);
+      await this.updateTokenInDb(refreshToken, data.refreshToken, userId, conn);
       return { status: true, data };
     } catch (error) {
       console.error("Error refreshing token:", error);
