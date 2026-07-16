@@ -1,6 +1,5 @@
 import { Apis } from "@/core/apis";
 import { HttpReq } from "@/core/http";
-import { UserDataType } from "@/types/dataTypes/userdataType";
 import { UserDataWithPermissionsType } from "@/types/dataTypes/with/userdataWithPermissionsType";
 import { ResponseType } from "@/types/responseTypes/responseType";
 import axios from "axios";

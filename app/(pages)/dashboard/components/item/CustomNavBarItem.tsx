@@ -1,10 +1,12 @@
+"use client";
+
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import SendIcon from "@mui/icons-material/Send";
 
 interface CustomNavBarItemProps {
-//   icon: React.ReactNode;
+  //   icon: React.ReactNode;
   title: string;
 }
 

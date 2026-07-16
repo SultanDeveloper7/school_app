@@ -1,7 +1,6 @@
 import { JwtPayloadType } from "@/types/coreTypes/jwtPayloadType";
 import { VerifyTokenResultType } from "@/types/coreTypes/verifyTokenResult";
 import jwt, { JsonWebTokenError, NotBeforeError, TokenExpiredError } from "jsonwebtoken";
-import connect from "../db/db";
 import { RefreshTokenType } from "@/types/databaseTypes/refreshTokenType";
 import { CreatedJwtTokenType } from "@/types/coreTypes/createdJwtTokenType";
 import { RefreshTokenResultType } from "@/types/coreTypes/refreshTokenResultType";
@@ -22,6 +21,8 @@ export class JwtService {
   }
 
   public generateToken(payload: JwtPayloadType, isUpdate: boolean = false, conn: Connection): CreatedJwtTokenType | null {
+    console.log(`[JWT SUB DEBUG] -- The payload is ${JSON.stringify(payload)}`);
+
     const token = jwt.sign(payload, this.secretToken, {
       expiresIn: this.expriresIn,
     } as jwt.SignOptions);
@@ -36,6 +37,7 @@ export class JwtService {
       return null;
     }
   }
+
   public async insertTokenToDb(refreshToken: string, userId: number, conn: Connection) {
     const sql = "INSERT INTO refresh_token (refresh_token, refresh_created, refresh_expires, user_id) VALUES (?, ?, ?, ?)";
     try {
@@ -50,6 +52,7 @@ export class JwtService {
       console.error("Error inserting token into database:", error);
     }
   }
+
   public async updateTokenInDb(oldRefreshToken: string, refreshToken: string, userId: number, conn: Connection) {
     const sql =
       "UPDATE refresh_token SET refresh_token = ?, refresh_created = ?, refresh_expires = ? WHERE user_id = ? AND refresh_token = ?";
@@ -67,10 +70,10 @@ export class JwtService {
     }
   }
 
-  public async refreshToken(refreshToken: string, userId: number, conn: Connection): Promise<RefreshTokenResultType> {
+  public async refreshToken(refreshToken: string, payload: JwtPayloadType, conn: Connection): Promise<RefreshTokenResultType> {
     const sql = "SELECT * FROM refresh_token WHERE refresh_token = ? AND user_id = ?";
     try {
-      const [rows] = await conn.execute(sql, [refreshToken, userId]);
+      const [rows] = await conn.execute(sql, [refreshToken, payload.user_id]);
       const result = rows as RefreshTokenType[];
       if (result.length === 0) {
         return { status: false, message: "Invalid refresh token", error: "INVALID_TOKEN" };
@@ -80,13 +83,18 @@ export class JwtService {
       if (currentTime > tokenExpiryTime) {
         return { status: false, message: "Refresh token has expired", error: "TOKEN_EXPIRED" };
       }
+      const anotherPayload = payload as JwtPayloadType & {
+        iat: number;
+        exp: number;
+      };
+      const { iat, exp, ...cleanPayload } = anotherPayload;
 
-      const data = this.generateToken({ user_id: userId }, true, conn);
+      const data = this.generateToken(cleanPayload, true, conn);
       if (!data) {
         return { status: false, message: "Failed to generate new token", error: "UNKNOWN_ERROR" };
       }
 
-      await this.updateTokenInDb(refreshToken, data.refreshToken, userId, conn);
+      await this.updateTokenInDb(refreshToken, data.refreshToken, payload.user_id, conn);
       return { status: true, data };
     } catch (error) {
       console.error("Error refreshing token:", error);

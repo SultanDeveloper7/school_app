@@ -1,7 +1,7 @@
+"use client";
+
 import { SubPermissionDataType } from "@/types/dataTypes/permissiondataType";
 import AddBoxTwoToneIcon from "@mui/icons-material/AddBoxTwoTone";
-import EditNoteTwoToneIcon from "@mui/icons-material/EditNoteTwoTone";
-import { Typography } from "@mui/material";
 import CustomStudentTableView from "./displayItem/CustomStudentTableView";
 interface CustomDisplayProps {
   subPermissions: SubPermissionDataType[] | undefined;

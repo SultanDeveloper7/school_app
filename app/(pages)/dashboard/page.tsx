@@ -1,24 +1,20 @@
 "use client";
 
+import { UserDataWithPermissionsType } from "@/types/dataTypes/with/userdataWithPermissionsType";
 import { useEffect, useState } from "react";
 import CustomAppbar from "./components/CustomAppbar";
-import { DashboardService } from "./functions";
-import CustomNavBar from "./components/CustomNavBar";
-import { UserDataWithPermissionsType } from "@/types/dataTypes/with/userdataWithPermissionsType";
 import CustomDisplay from "./components/CustomDisplay";
+import CustomNavBar from "./components/CustomNavBar";
+import { DashboardService } from "./functions";
 
 export default function DashboardPage() {
   const [userdata, setUserdata] = useState<UserDataWithPermissionsType | null>(null);
   const [screenIndex, setScreenIndex] = useState<number>(0);
-  const dashboardService = new DashboardService();
+  const dashboardServices = new DashboardService();
   useEffect(() => {
     const init = async () => {
-      try {
-        const response = await dashboardService.getUserDetails();
-        setUserdata(response?.data || null);
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-      }
+      const response = await dashboardServices.getUserDetails();
+      setUserdata(response.data);
     };
     init();
   }, []);

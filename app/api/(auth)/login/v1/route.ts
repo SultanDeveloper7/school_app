@@ -6,6 +6,7 @@ import { NextRequest } from "next/server";
 import crypto from "crypto";
 import { LoginResponseType } from "@/types/responseTypes/loginResponseType";
 import { JwtService } from "@/core/jwt/jwt";
+import { PermissionsServices } from "@/core/permission/permissions";
 
 export async function POST(req: NextRequest) {
   const formData = await req.json();
@@ -30,9 +31,12 @@ export async function POST(req: NextRequest) {
       return response(null, "Invalid password", "INVALID_PASSWORD", 401);
     }
     const jwtService = new JwtService();
+    const permissionsServices = new PermissionsServices();
+    const userId = result[0].user_id;
+    const userPermissions = await permissionsServices.getUserPermissions(userId);
     const jwtResult = jwtService.generateToken(
       {
-        user_id: result[0].user_id,
+        user_id: userId,
       },
       false,
       conn,
@@ -62,7 +66,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     return response(null, `Server error: ${error}`, "SERVER_ERROR", 500);
   } finally {
-    if(conn) {
+    if (conn) {
       await conn.end();
     }
   }
