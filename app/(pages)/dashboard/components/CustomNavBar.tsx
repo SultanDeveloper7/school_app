@@ -3,13 +3,15 @@
 import { PermissionDataType } from "@/types/dataTypes/permissiondataType";
 import List from "@mui/material/List";
 import CustomNavBarItem from "./item/CustomNavBarItem";
+import { Dispatch, SetStateAction } from "react";
 
 interface CustomNavBarProps {
   permissions: PermissionDataType[];
+  setScreenIndex: Dispatch<SetStateAction<number | null>>;
 }
 
 export default function CustomNavBar(props: CustomNavBarProps) {
-  const { permissions } = props;
+  const { permissions, setScreenIndex } = props;
   return (
     <List
       sx={{ width: "100%", maxWidth: 240, bgcolor: "#3B3B3B" }}
@@ -21,8 +23,17 @@ export default function CustomNavBar(props: CustomNavBarProps) {
       //   </ListSubheader>
       // }
     >
-      {permissions.map((permission) => {
-        return <CustomNavBarItem key={permission.permission_id} title={permission.permission_title} />;
+      {permissions.map((permission, index) => {
+        return (
+          <CustomNavBarItem
+            key={permission.permission_id}
+            onClick={() => {
+              console.log("The index is: " + index);
+              setScreenIndex(index);
+            }}
+            title={permission.permission_title}
+          />
+        );
       })}
     </List>
   );

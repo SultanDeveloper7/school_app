@@ -19,6 +19,7 @@ export class DashboardService {
         },
       });
     } catch (error) {
+      console.log(error);
       if (axios.isAxiosError(error)) {
         const data = error.response?.data as ResponseType<UserDataWithPermissionsType>;
         throw data.message || "An unexpected error occurred.";
