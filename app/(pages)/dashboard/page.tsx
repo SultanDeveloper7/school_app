@@ -19,15 +19,19 @@ export default function DashboardPage() {
     init();
   }, []);
 
-  return (
-    userdata ? (
-      <div className="h-screen flex flex-col">
-        <CustomAppbar userdata={userdata} />
-        <div className="w-screen flex grow">
-          <CustomNavBar permissions={userdata.permissions} setScreenIndex={setScreenIndex} />
-          {screenIndex !== null && <CustomDisplay subPermissions={userdata.permissions[screenIndex].sub_permissions}/>}
-        </div>
+  return userdata ? (
+    <div className="h-screen flex flex-col">
+      <CustomAppbar userdata={userdata} />
+      <div className="w-screen flex grow">
+        <CustomNavBar permissions={userdata.permissions} setScreenIndex={setScreenIndex} />
+        {screenIndex !== null && (
+          <div className="flex-1 overflow-hidden">
+            <CustomDisplay permissions={userdata.permissions[screenIndex]} />
+          </div>
+        )}
       </div>
-    ) : <>Bruh</>
+    </div>
+  ) : (
+    <>Bruh</>
   );
 }

@@ -1,5 +1,6 @@
 import { Apis } from "@/core/apis";
 import { HttpReq } from "@/core/http";
+import { PermissionsColumnTableType } from "@/types/databaseTypes/permissionsColumnTableType";
 import { UserDataWithPermissionsType } from "@/types/dataTypes/with/userdataWithPermissionsType";
 import { ResponseType } from "@/types/responseTypes/responseType";
 import axios from "axios";
@@ -9,6 +10,27 @@ export class DashboardService {
     return fetch(Apis.LOGOUT_API, {
       method: "GET",
     });
+  }
+
+  public async getPermissionsColumns(id: number) {
+    try {
+      return await HttpReq.get<ResponseType<PermissionsColumnTableType[]>>(Apis.PERMISSIONS_COLUMNS_API, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        params: {
+          id,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      if (axios.isAxiosError(error)) {
+        const data = error.response?.data as ResponseType<PermissionsColumnTableType[]>;
+        throw data.message || "An unexpected error occurred.";
+      } else {
+        throw new Error("An unexpected error occurred.");
+      }
+    }
   }
 
   public async getUserDetails(): Promise<ResponseType<UserDataWithPermissionsType>> {
