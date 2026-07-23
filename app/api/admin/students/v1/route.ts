@@ -15,5 +15,7 @@ export async function GET(req: NextRequest) {
   if (!payload) {
     return response(null, "Invalid or expired token", "INVALID_TOKEN", 401);
   }
+  
   return response({ data: payload }, "Token is valid", "TOKEN_VALID", 200);
+  
 }

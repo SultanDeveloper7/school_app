@@ -17,9 +17,13 @@ const rows = [
 ];
 interface CustomStudentTableViewProps {
   gridColDef: GridColDef[];
+  permission: string | undefined;
 }
-export default function CustomStudentTableView(props: CustomStudentTableViewProps) {
-  const { gridColDef } = props;
+export default function CustomTableView(props: CustomStudentTableViewProps) {
+  const { gridColDef, permission } = props;
+  
+
+
   return (
     <Paper sx={{ height: "100%", width: "100%" }}>
       <DataGrid

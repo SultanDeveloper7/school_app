@@ -41,9 +41,13 @@ export async function GET(req: NextRequest) {
     const data = result as UserDataType[];
     const permissions = result2 as PermissionDataType[];
     const sql3 = `
-    SELECT *
-    FROM sub_permission
-    WHERE permission_id IN (?)`;
+    SELECT sp.*, p.permission_id FROM sub_permission as sp
+    JOIN permissions_sub_permissions_rel as psp_rel
+    ON psp_rel.sub_permission_id = sp.sub_permission_id
+    JOIN permissions as p
+    ON p.permission_id = psp_rel.permission_id
+    WHERE p.permission_id IN (?)`;
+
     const permissionIds = permissions.map((p) => p.permission_id);
     const [rows] = await conn.query(sql3, [permissionIds]);
     const subPermissions = rows as SubPermissionDataType[];
@@ -67,6 +71,6 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return response(null, "Something went wrong", "UNKNOWN_ERROR", 501);
   } finally {
-    if(conn) await conn.end();
+    if (conn) await conn.end();
   }
 }

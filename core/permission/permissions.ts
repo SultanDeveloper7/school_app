@@ -51,4 +51,8 @@ export class PermissionsServices {
       if (conn) await conn.end();
     }
   }
+
+  public async checkPermission(permissionCode: string, subPermissionCode: string) {
+    
+  }
 }
